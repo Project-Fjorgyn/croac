@@ -25,7 +25,8 @@ class PhasedArrayModel(object):
         self.theta_res = theta_res
         self.phi_res = phi_res
         # array info
-        self.base_u, self.base_v = self._initialize_scan_angles()
+        self.base_u, self.base_v, self.theta, self.phi = \
+         self._initialize_scan_angles()
         self.u, self.v, self.m, self.n = self._copy_uv_over_array_and_sources()
         # source info
         self.set_source_info(np.zeros(P), np.zeros(P), np.ones(P), np.zeros(P))
@@ -50,7 +51,12 @@ class PhasedArrayModel(object):
         u = np.sin(theta)*np.cos(phi)
         v = np.sin(theta)*np.sin(phi)
         flat_shape = u.shape[0] * u.shape[1]
-        return u.reshape(flat_shape), v.reshape(flat_shape)
+        return (
+            u.reshape(flat_shape), 
+            v.reshape(flat_shape),
+            theta.reshape(flat_shape),
+            phi.reshape(flat_shape)
+        )
 
     def _copy_uv_over_array_and_sources(self):
         """
@@ -103,7 +109,7 @@ class PhasedArrayModel(object):
 
     def compute_P(self):
         I = self.compute_I()
-        self.P = I * np.conjugate(I)
+        self.P = np.real(I * np.conjugate(I))
         return self.P
 
 
