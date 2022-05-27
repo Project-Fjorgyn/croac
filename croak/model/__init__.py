@@ -14,14 +14,15 @@ class PhasedArrayModel(object):
             phi_res (float) - resolution of phi scan
         """
         self.M = M 
-        self.N = N 
+        self.N = N if D == 2 else 1
         self.d_x = d_x
         self.d_y = d_y
         self.P = P
         self.D = D
         self.theta_res = theta_res
         self.phi_res = phi_res
-        self.u, self.v = self._initialize_scan_angles()
+        self.base_u, self.base_v = self._initialize_scan_angles()
+        self.u, self.v, self.m, self.n = self._copy_over_array_and_sources()
 
 
     def _initialize_scan_angles(self):
@@ -45,6 +46,19 @@ class PhasedArrayModel(object):
         v = np.sin(theta)*np.sin(phi)
         flat_shape = u.shape[0] * u.shape[1]
         return u.reshape(flat_shape), v.reshape(flat_shape)
+
+    def _copy_over_array(self):
+        """
+        This method takes our u and v and projects them
+        over the array so we can vectorize the
+        computations in our model. It also gives us back
+        the m and n in a vectorized fashion. 
+        """
+        # note that because the problem is separable we can 
+        # grid out u and v separably 
+        u, _, m = np.meshgrid(self.base_u, range(self.P), range(self.M), indexing='ij')
+        v, _, n = np.meshgrid(self.base_v, range(self.P), range(self.N), indexing='ij')
+        return u, v, m, n
         
     
 

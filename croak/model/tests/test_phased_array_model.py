@@ -16,10 +16,10 @@ class TestPhasedArrayModel(unittest.TestCase):
         u = np.sin(theta) * np.cos(phi)
         v = np.sin(theta) * np.sin(phi)
         flat_shape = u.shape[0] * u.shape[1]
-        assert model.u.shape == (13*4,)
-        assert model.v.shape == (13*4,)
-        assert (u.reshape(flat_shape) == model.u).all()
-        assert (v.reshape(flat_shape) == model.v).all()
+        assert model.base_u.shape == (13*4,)
+        assert model.base_v.shape == (13*4,)
+        assert (u.reshape(flat_shape) == model.base_u).all()
+        assert (v.reshape(flat_shape) == model.base_v).all()
 
     def test_scan_angles_1D(self):
         model = PhasedArrayModel(
@@ -30,8 +30,17 @@ class TestPhasedArrayModel(unittest.TestCase):
         theta, phi = np.meshgrid(theta, phi)
         u = np.sin(theta) * np.cos(phi)
         v = np.sin(theta) * np.sin(phi)
-        assert model.u.shape == (7,)
-        assert model.v.shape == (7,)
-        assert (u == model.u).all()
-        assert (v == model.v).all()
-        assert (model.v == 0).all()
+        assert model.base_u.shape == (7,)
+        assert model.base_v.shape == (7,)
+        assert (u == model.base_u).all()
+        assert (v == model.base_v).all()
+        assert (model.base_v == 0).all()
+
+    def test_copy_over_array(self):
+        model = PhasedArrayModel(
+            M=5, N=10, P=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
+        )
+        assert model.u.shape == (52, 2, 5)
+        assert model.v.shape == (52, 2, 10)
+        assert set(model.m.reshape(52 * 2 * 5)) == set(range(5))
+        assert set(model.n.reshape(52 * 2 * 10)) == set(range(10))
