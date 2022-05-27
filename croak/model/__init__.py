@@ -72,7 +72,7 @@ class PhasedArrayModel(object):
         self.source_u = np.sin(theta)*np.cos(phi)
         self.source_v = np.sin(theta)*np.sin(phi)
         self.a = a 
-        self.psi = psi
+        self.phases = np.exp(1j*psi)
 
         self.su, self.sv = self._copy_source_positions_over_array_sources()
         
@@ -93,5 +93,18 @@ class PhasedArrayModel(object):
 
     def compute_I(self):
         self.e_x, self.e_y = self._compute_e()
+        # sum over the array for each of the sources
+        sum_over_array = np.sum(self.e_x, axis=2) * np.sum(self.e_y, axis=2)
+        # get the contributions per source
+        source_contributions = sum_over_array * self.a * self.phases
+        # sum over the sources
+        self.I = np.sum(source_contributions, axis=1)
+        return self.I
+
+    def compute_P(self):
+        I = self.compute_I()
+        self.P = I * np.conjugate(I)
+        return self.P
+
 
     

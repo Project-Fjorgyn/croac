@@ -64,7 +64,7 @@ class TestPhasedArrayModel(unittest.TestCase):
             np.sin(0)*np.sin(0)
         ]) == model.source_v).all()
         assert (model.a == np.array([1, 2])).all()
-        assert (model.psi == np.array([3, 4])).all()
+        assert (model.phases == np.array([np.exp(3j), np.exp(4j)])).all()
 
         assert model.su.shape == (52, 2, 5)
         assert model.sv.shape == (52, 2, 10)
@@ -125,3 +125,32 @@ class TestPhasedArrayModel(unittest.TestCase):
             1j * np.pi * 2 * 3 * (np.sin(np.pi/4)*np.sin(np.pi/2) - model.v[0,0,2])
         )
         assert dif * np.conjugate(dif) < 10 ** -16
+
+    def test_compute_I(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
+        )
+        model.set_source_info(
+            np.array([np.pi/4, 0]),
+            np.array([np.pi/2, 0]),
+            np.array([1, 2]),
+            np.array([3, 4])
+        )
+        I = model.compute_I()
+        assert I.shape == (4,)
+        assert (model.I == I).all()
+
+    def test_compute_P(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
+        )
+        model.set_source_info(
+            np.array([np.pi/4, 0]),
+            np.array([np.pi/2, 0]),
+            np.array([1, 2]),
+            np.array([3, 4])
+        )
+        P = model.compute_P()
+        assert P.shape == (4,)
+        assert (model.P == P).all()
+        assert (P == model.I * np.conjugate(model.I)).all()
