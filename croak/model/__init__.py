@@ -43,7 +43,8 @@ class PhasedArrayModel(object):
         # which we then convert to u, v
         u = np.sin(theta)*np.cos(phi)
         v = np.sin(theta)*np.sin(phi)
-        return u, v
+        flat_shape = u.shape[0] * u.shape[1]
+        return u.reshape(flat_shape), v.reshape(flat_shape)
         
     
 

@@ -15,10 +15,11 @@ class TestPhasedArrayModel(unittest.TestCase):
         theta, phi = np.meshgrid(theta, phi)
         u = np.sin(theta) * np.cos(phi)
         v = np.sin(theta) * np.sin(phi)
-        assert u.shape == (13, 4)
-        assert v.shape == (13, 4)
-        assert (u == model.u).all()
-        assert (v == model.v).all()
+        flat_shape = u.shape[0] * u.shape[1]
+        assert model.u.shape == (13*4,)
+        assert model.v.shape == (13*4,)
+        assert (u.reshape(flat_shape) == model.u).all()
+        assert (v.reshape(flat_shape) == model.v).all()
 
     def test_scan_angles_1D(self):
         model = PhasedArrayModel(
@@ -29,7 +30,8 @@ class TestPhasedArrayModel(unittest.TestCase):
         theta, phi = np.meshgrid(theta, phi)
         u = np.sin(theta) * np.cos(phi)
         v = np.sin(theta) * np.sin(phi)
-        assert u.shape == (1, 7)
-        assert v.shape == (1, 7)
+        assert model.u.shape == (7,)
+        assert model.v.shape == (7,)
         assert (u == model.u).all()
         assert (v == model.v).all()
+        assert (model.v == 0).all()
