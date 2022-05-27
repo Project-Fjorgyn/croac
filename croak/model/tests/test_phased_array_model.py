@@ -36,7 +36,7 @@ class TestPhasedArrayModel(unittest.TestCase):
         assert (v == model.base_v).all()
         assert (model.base_v == 0).all()
 
-    def test_copy_over_array(self):
+    def test_copy_uv_over_array_and_sources(self):
         model = PhasedArrayModel(
             M=5, N=10, P=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
         )
@@ -44,3 +44,45 @@ class TestPhasedArrayModel(unittest.TestCase):
         assert model.v.shape == (52, 2, 10)
         assert set(model.m.reshape(52 * 2 * 5)) == set(range(5))
         assert set(model.n.reshape(52 * 2 * 10)) == set(range(10))
+
+    def test_copy_source_positions_over_array_source(self):
+        model = PhasedArrayModel(
+            M=5, N=10, P=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.set_source_info(
+            np.array([np.pi/4, 0]),
+            np.array([np.pi/2, 0]),
+            np.array([1, 2]),
+            np.array([3, 4])
+        )
+        assert (np.array([
+            np.sin(np.pi/4)*np.cos(np.pi/2),
+            np.sin(0)*np.cos(0)
+        ]) == model.source_u).all()
+        assert (np.array([
+            np.sin(np.pi/4)*np.sin(np.pi/2),
+            np.sin(0)*np.sin(0)
+        ]) == model.source_v).all()
+        assert (model.a == np.array([1, 2])).all()
+        assert (model.psi == np.array([3, 4])).all()
+
+        assert model.su.shape == (52, 2, 5)
+        assert model.sv.shape == (52, 2, 10)
+        
+        assert (
+            set(model.su[:,0,:].reshape(52*5)) 
+            == set([np.sin(np.pi/4)*np.cos(np.pi/2)])
+        )
+        assert (
+            set(model.su[:,1,:].reshape(52*5)) 
+            == set([np.sin(0)*np.cos(0)])
+        )
+
+        assert (
+            set(model.sv[:,0,:].reshape(52*10)) 
+            == set([np.sin(np.pi/4)*np.sin(np.pi/2)])
+        )
+        assert (
+            set(model.sv[:,1,:].reshape(52*10)) 
+            == set([np.sin(0)*np.sin(0)])
+        )

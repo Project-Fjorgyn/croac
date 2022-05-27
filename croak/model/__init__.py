@@ -21,9 +21,11 @@ class PhasedArrayModel(object):
         self.D = D
         self.theta_res = theta_res
         self.phi_res = phi_res
+        # array info
         self.base_u, self.base_v = self._initialize_scan_angles()
-        self.u, self.v, self.m, self.n = self._copy_over_array_and_sources()
-
+        self.u, self.v, self.m, self.n = self._copy_uv_over_array_and_sources()
+        # source info
+        self.set_source_info(np.zeros(P), np.zeros(P), np.ones(P), np.zeros(P))
 
     def _initialize_scan_angles(self):
         """
@@ -47,7 +49,7 @@ class PhasedArrayModel(object):
         flat_shape = u.shape[0] * u.shape[1]
         return u.reshape(flat_shape), v.reshape(flat_shape)
 
-    def _copy_over_array(self):
+    def _copy_uv_over_array_and_sources(self):
         """
         This method takes our u and v and projects them
         over the array so we can vectorize the
@@ -59,7 +61,26 @@ class PhasedArrayModel(object):
         u, _, m = np.meshgrid(self.base_u, range(self.P), range(self.M), indexing='ij')
         v, _, n = np.meshgrid(self.base_v, range(self.P), range(self.N), indexing='ij')
         return u, v, m, n
+
+    def set_source_info(self, theta, phi, a, psi):
+        for arr in (theta, phi, a, psi):
+            assert arr.shape == (self.P,)
+
+        self.source_u = np.sin(theta)*np.cos(phi)
+        self.source_v = np.sin(theta)*np.sin(phi)
+        self.a = a 
+        self.psi = psi
+
+        self.su, self.sv = self._copy_source_positions_over_array_sources()
         
-    
+    def _copy_source_positions_over_array_sources(self):
+        """
+        This method projects our amplitudes, phases,
+        and source positions (in uv space) over the grid
+        so that they are ready for vectorized computation.
+        """
+        _, u, _ = np.meshgrid(self.base_u, self.source_u, range(self.M), indexing='ij')
+        _, v, _ = np.meshgrid(self.base_v, self.source_v, range(self.N), indexing='ij')
+        return u, v
 
     
