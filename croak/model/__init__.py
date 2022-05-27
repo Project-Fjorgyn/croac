@@ -1,9 +1,10 @@
 import numpy as np
 
 class PhasedArrayModel(object):
-    def __init__(self, M, N, d_x, d_y, P, D=2, theta_res=np.pi/1000, phi_res=np.pi/1000):
+    def __init__(self, omega, M, N, d_x, d_y, P, D=2, theta_res=np.pi/1000, phi_res=np.pi/1000):
         """
         Inputs:
+            omega (float) - the wavelength
             M (int) - size of the array along the x-axis
             N (int) - size of the array along the y-axis
             d_x (float) - spacing of elements along the x-axis
@@ -13,6 +14,8 @@ class PhasedArrayModel(object):
             theta_res (float) - resolution of theta scan
             phi_res (float) - resolution of phi scan
         """
+        self.omega = omega
+        self.k = 2 * np.pi / omega
         self.M = M 
         self.N = N if D == 2 else 1
         self.d_x = d_x
@@ -58,8 +61,8 @@ class PhasedArrayModel(object):
         """
         # note that because the problem is separable we can 
         # grid out u and v separably 
-        u, _, m = np.meshgrid(self.base_u, range(self.P), range(self.M), indexing='ij')
-        v, _, n = np.meshgrid(self.base_v, range(self.P), range(self.N), indexing='ij')
+        u, _, m = np.meshgrid(self.base_u, range(self.P), range(1, self.M + 1), indexing='ij')
+        v, _, n = np.meshgrid(self.base_v, range(self.P), range(1, self.N + 1), indexing='ij')
         return u, v, m, n
 
     def set_source_info(self, theta, phi, a, psi):
@@ -82,5 +85,13 @@ class PhasedArrayModel(object):
         _, u, _ = np.meshgrid(self.base_u, self.source_u, range(self.M), indexing='ij')
         _, v, _ = np.meshgrid(self.base_v, self.source_v, range(self.N), indexing='ij')
         return u, v
+
+    def _compute_e(self):
+        e_x = np.exp(1j*self.k*self.m*self.d_x*(self.su-self.u))
+        e_y = np.exp(1j*self.k*self.n*self.d_y*(self.sv-self.v))
+        return e_x, e_y
+
+    def compute_I(self):
+        self.e_x, self.e_y = self._compute_e()
 
     
