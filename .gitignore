@@ -1,0 +1,4 @@
+.ipynb*
+.devcontainer
+.pyc
+__pycache__
