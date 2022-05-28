@@ -132,21 +132,36 @@ class PhasedArrayModel(object):
     def compute_gradient_I_u(self):
         summand = 1j*self.k*self.d_x*self.m*self.e_x
         V = self.a * self.phases * self.sum_e_y
-        return V * np.sum(summand, axis=2)
+        self.grad_I_u = V * np.sum(summand, axis=2)
+        return self.grad_I_u
 
     def compute_gradient_I_v(self):
         summand = 1j*self.k*self.d_y*self.n*self.e_y
         U = self.a * self.phases * self.sum_e_x
-        return U * np.sum(summand, axis=2)
+        self.grad_I_v = U * np.sum(summand, axis=2)
+        return self.grad_I_v
 
     def compute_gradient_I_a(self):
+        self.grad_I_a = self.I_p / self.a
         return self.I_p / self.a
 
     def compute_gradient_I_phases(self):
-        return self.I_p * 1j
+        self.grad_I_phases = self.I_p * 1j
+        return self.grad_I_phases
 
     def compute_gradient_I(self):
-        
+        # note that at this stage we have to
+        # transpose the matrix so that the last
+        # axis is our scan positions axis
+        self.grad_I_p = np.concatenate(
+            (
+                self.grad_I_u,
+                self.grad_I_v,
+                self.grad_I_a,
+                self.grad_I_phases
+            ), axis=1
+        ).T
+        return self.grad_I_p
 
     def fit(self, X, y):
         self._ingest_new_scan_positions(X)

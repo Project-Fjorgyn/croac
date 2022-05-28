@@ -231,3 +231,17 @@ class TestPhasedArrayModel(unittest.TestCase):
         model.I_p = np.array([1, 2])
         expected = np.array([1j, 2j])
         assert (expected == model.compute_gradient_I_phases()).all()
+
+    def test_compute_gradient_I(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.grad_I_u = np.array([[1, 2], [3, 4]])
+        model.grad_I_v = np.array([[5, 6], [7, 8]])
+        model.grad_I_a = np.array([[8, 7], [6, 5]])
+        model.grad_I_phases = np.array([[4, 3], [2, 1]])
+        expected = np.array([
+            [1, 2, 5, 6, 8, 7, 4, 3],
+            [3, 4, 7, 8, 6, 5, 2, 1]
+        ]).T
+        assert (expected == model.compute_gradient_I()).all()
