@@ -136,7 +136,8 @@ class TestPhasedArrayModel(unittest.TestCase):
             np.array([1, 2]),
             np.array([3, 4])
         )
-        I = model.compute_I()
+        model._compute_e()
+        I = model._compute_I()
         assert I.shape == (4,)
         assert (model.I == I).all()
 
@@ -150,7 +151,9 @@ class TestPhasedArrayModel(unittest.TestCase):
             np.array([1, 2]),
             np.array([3, 4])
         )
-        P = model.compute_P()
+        model._compute_e()
+        model._compute_I()
+        P = model._compute_P()
         assert P.shape == (4,)
         assert (model.P == P).all()
         assert (P == model.I * np.conjugate(model.I)).all()
@@ -175,7 +178,7 @@ class TestPhasedArrayModel(unittest.TestCase):
         )
         model.P = np.array([1, 2, 3])
         model.O = np.array([3, 2, 1])
-        E = model.compute_E()
+        E = model._compute_E()
         assert E == model.E
         assert E == np.sqrt(8/3)
 
@@ -195,7 +198,7 @@ class TestPhasedArrayModel(unittest.TestCase):
             3 * 1 * 1 * (1j * 2 * 3 * 1 * 1 + 1j * 2 * 3 * 2 * 2),
             4 * 2 * 2 * (1j * 2 * 3 * 1 * 3 + 1j * 2 * 3 * 2 * 4)
         ]])
-        assert (expected == model.compute_gradient_I_u()).all()
+        assert (expected == model._compute_gradient_I_u()).all()
 
     def test_compute_gradient_I_v(self):
         model = PhasedArrayModel(
@@ -213,7 +216,7 @@ class TestPhasedArrayModel(unittest.TestCase):
             3 * 1 * 1 * (1j * 2 * 3 * 1 * 1 + 1j * 2 * 3 * 2 * 2),
             4 * 2 * 2 * (1j * 2 * 3 * 1 * 3 + 1j * 2 * 3 * 2 * 4)
         ]])
-        assert (expected == model.compute_gradient_I_v()).all()
+        assert (expected == model._compute_gradient_I_v()).all()
 
     def test_compute_gradient_I_a(self):
         model = PhasedArrayModel(
@@ -222,7 +225,7 @@ class TestPhasedArrayModel(unittest.TestCase):
         model.I_p = np.array([1, 2])
         model.a = np.array([3, 4])
         expected = np.array([1/3, 2/4])
-        assert (expected == model.compute_gradient_I_a()).all()
+        assert (expected == model._compute_gradient_I_a()).all()
 
     def test_compute_gradient_I_phases(self):
         model = PhasedArrayModel(
@@ -230,7 +233,7 @@ class TestPhasedArrayModel(unittest.TestCase):
         )
         model.I_p = np.array([1, 2])
         expected = np.array([1j, 2j])
-        assert (expected == model.compute_gradient_I_phases()).all()
+        assert (expected == model._compute_gradient_I_phases()).all()
 
     def test_compute_gradient_I(self):
         model = PhasedArrayModel(
@@ -244,4 +247,36 @@ class TestPhasedArrayModel(unittest.TestCase):
             [1, 2, 5, 6, 8, 7, 4, 3],
             [3, 4, 7, 8, 6, 5, 2, 1]
         ]).T
-        assert (expected == model.compute_gradient_I()).all()
+        assert (expected == model._compute_gradient_I()).all()
+
+    def test_compute_gradient_P(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.grad_I = np.array([
+            [1+1j, 1-2j],
+            [2, 3j]
+        ])
+        model.I = np.array([3-1j, 1j])
+        expected = np.array([
+            [(1+1j) * (3+1j) + (1-1j)*(3-1j), (1-2j)*(-1j) + (1+2j)*(1j)],
+            [(2) * (3+1j) + (2)*(3-1j), (3j)*(-1j) + (-3j)*(1j)]
+        ])
+        assert (expected == model._compute_gradient_P()).all()
+
+    def test_compute_gradient(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.E = 2
+        model.O = np.zeros(2)
+        model.grad_P = np.array([
+            [1, 2],
+            [3, 4]
+        ])
+        model.Errors = np.array([5, 6])
+        expected = np.array([
+            1/(2*2) * (1 * 5 + 2 * 6),
+            1/(2*2) * (3 * 5 + 4 * 6),
+        ])
+        assert (expected == model._compute_gradient()).all()
