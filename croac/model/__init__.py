@@ -135,6 +135,10 @@ class PhasedArrayModel(object):
         self.E = np.sqrt(np.sum(self.Errors ** 2)/self.O.shape[0])
         return self.E
 
+    def compute_E(self):
+        self.compute_P()
+        return self._compute_E()
+
     def _compute_gradient_I_u(self):
         summand = 1j*self.k*self.d_x*self.m*self.e_x
         V = self.a * self.phases * self.sum_e_y
