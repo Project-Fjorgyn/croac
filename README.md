@@ -7,10 +7,10 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
-from croak.model import PhasedArrayModel
+from croac.model import PhasedArrayModel
 
 model = PhasedArrayModel(
-    omega=2, M=10, N=1, d_x=1, d_y=1, D=1, P=1
+    omega=2, M=10, N=1, d_x=1, d_y=1, D=1, S=1
 )
 theta = model.theta
 phi = model.phi
