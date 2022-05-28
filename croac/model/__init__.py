@@ -155,14 +155,30 @@ class PhasedArrayModel(object):
         self.grad_I_phases = self.I_p * 1j
         return self.grad_I_phases
 
+    def _compute_gradient_I_theta(self):
+        # we have to transpose to broadcast positions correctly
+        self.grad_I_theta = (
+            self.grad_I_u.T * np.cos(self.theta) * np.cos(self.phi)
+            + self.grad_I_v.T * np.cos(self.theta) * np.sin(self.phi)
+        ).T
+        return self.grad_I_theta
+
+    def _compute_gradient_I_phi(self):
+        # we have to transpose to broadcast positions correctly
+        self.grad_I_phi = (
+            self.grad_I_v.T * np.sin(self.theta) * np.cos(self.phi)
+            - self.grad_I_u.T * np.sin(self.theta) * np.sin(self.phi)
+        ).T 
+        return self.grad_I_phi
+
     def _compute_gradient_I(self):
         # note that at this stage we have to
         # transpose the matrix so that the last
         # axis is our scan positions axis
         self.grad_I = np.concatenate(
             (
-                self.grad_I_u,
-                self.grad_I_v,
+                self.grad_I_theta,
+                self.grad_I_phi,
                 self.grad_I_a,
                 self.grad_I_phases
             ), axis=1
@@ -190,6 +206,8 @@ class PhasedArrayModel(object):
         self._compute_gradient_I_v()
         self._compute_gradient_I_a()
         self._compute_gradient_I_phases()
+        self._compute_gradient_I_theta()
+        self._compute_gradient_I_phi()
         self._compute_gradient_I()
         self._compute_gradient_P()
         return self._compute_gradient()

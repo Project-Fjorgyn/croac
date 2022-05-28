@@ -235,12 +235,40 @@ class TestPhasedArrayModel(unittest.TestCase):
         expected = np.array([1j, 2j])
         assert (expected == model._compute_gradient_I_phases()).all()
 
+    def test_compute_gradient_I_theta(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.grad_I_u = np.array([[1, 2]])
+        model.grad_I_v = np.array([[3, 4]])
+        model.theta = np.array([np.pi/4])
+        model.phi = np.array([np.pi/6])
+        expected = np.array([[
+            1 * np.cos(np.pi/4) * np.cos(np.pi/6) + 3 * np.cos(np.pi/4) * np.sin(np.pi/6),
+            2 * np.cos(np.pi/4) * np.cos(np.pi/6) + 4 * np.cos(np.pi/4) * np.sin(np.pi/6)
+        ]])
+        assert (expected == model._compute_gradient_I_theta()).all()
+
+    def test_compute_gradient_I_theta(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.grad_I_u = np.array([[1, 2]])
+        model.grad_I_v = np.array([[3, 4]])
+        model.theta = np.array([np.pi/4])
+        model.phi = np.array([np.pi/6])
+        expected = np.array([[
+            -1 * np.sin(np.pi/4) * np.sin(np.pi/6) + 3 * np.sin(np.pi/4) * np.cos(np.pi/6),
+            -2 * np.sin(np.pi/4) * np.sin(np.pi/6) + 4 * np.sin(np.pi/4) * np.cos(np.pi/6)
+        ]])
+        assert (expected == model._compute_gradient_I_phi()).all()
+
     def test_compute_gradient_I(self):
         model = PhasedArrayModel(
             omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
-        model.grad_I_u = np.array([[1, 2], [3, 4]])
-        model.grad_I_v = np.array([[5, 6], [7, 8]])
+        model.grad_I_theta = np.array([[1, 2], [3, 4]])
+        model.grad_I_phi = np.array([[5, 6], [7, 8]])
         model.grad_I_a = np.array([[8, 7], [6, 5]])
         model.grad_I_phases = np.array([[4, 3], [2, 1]])
         expected = np.array([
