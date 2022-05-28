@@ -75,6 +75,8 @@ class PhasedArrayModel(object):
         for arr in (theta, phi, a, psi):
             assert arr.shape == (self.P,)
 
+        self.source_theta = theta
+        self.source_phi = phi
         self.source_u = np.sin(theta)*np.cos(phi)
         self.source_v = np.sin(theta)*np.sin(phi)
         self.a = a 
@@ -100,11 +102,13 @@ class PhasedArrayModel(object):
     def compute_I(self):
         self.e_x, self.e_y = self._compute_e()
         # sum over the array for each of the sources
-        sum_over_array = np.sum(self.e_x, axis=2) * np.sum(self.e_y, axis=2)
+        self.sum_e_x = np.sum(self.e_x, axis=2)
+        self.sum_e_y = np.sum(self.e_y, axis=2)
+        sum_over_array = self.sum_e_x * self.sum_e_y
         # get the contributions per source
-        source_contributions = sum_over_array * self.a * self.phases
+        self.I_p = sum_over_array * self.a * self.phases
         # sum over the sources
-        self.I = np.sum(source_contributions, axis=1)
+        self.I = np.sum(self.I_p, axis=1)
         return self.I
 
     def compute_P(self):
@@ -112,5 +116,40 @@ class PhasedArrayModel(object):
         self.P = np.real(I * np.conjugate(I))
         return self.P
 
+    def _ingest_new_scan_positions(self, X):
+        self.theta = X[:,0]
+        self.phi = X[:,1]
+        self.base_u = np.sin(self.theta)*np.cos(self.phi)
+        self.base_v = np.sin(self.theta)*np.sin(self.phi)
+        self.u, self.v, self.m, self.n = self._copy_uv_over_array_and_sources()
+        self.set_source_info(self.source_theta, self.source_phi, self.a, self.phases)
 
-    
+    def compute_E(self):
+        self.Errors = self.P - self.O
+        self.E = np.sqrt(np.sum(self.Errors ** 2)/self.O.shape[0])
+        return self.E
+
+    def compute_gradient_I_u(self):
+        summand = 1j*self.k*self.d_x*self.m*self.e_x
+        V = self.a * self.phases * self.sum_e_y
+        return V * np.sum(summand, axis=2)
+
+    def compute_gradient_I_v(self):
+        summand = 1j*self.k*self.d_y*self.n*self.e_y
+        U = self.a * self.phases * self.sum_e_x
+        return U * np.sum(summand, axis=2)
+
+    def compute_gradient_I_a(self):
+        return self.I_p / self.a
+
+    def compute_gradient_I_phases(self):
+        return self.I_p * 1j
+
+    def compute_gradient_I(self):
+        
+
+    def fit(self, X, y):
+        self._ingest_new_scan_positions(X)
+        self.O = y
+
+

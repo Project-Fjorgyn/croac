@@ -154,3 +154,80 @@ class TestPhasedArrayModel(unittest.TestCase):
         assert P.shape == (4,)
         assert (model.P == P).all()
         assert (P == model.I * np.conjugate(model.I)).all()
+
+    def test_ingest_new_scan_positions(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model._ingest_new_scan_positions(np.array([[0, 0], [np.pi/4, np.pi/2]]))
+        assert (model.theta == np.array([0, np.pi/4])).all()
+        assert (model.phi == np.array([0, np.pi/2])).all()
+        assert (model.base_u == np.sin([0, np.pi/4]) * np.cos([0, np.pi/2])).all()
+        assert (model.base_v == np.sin([0, np.pi/4]) * np.sin([0, np.pi/2])).all()
+        assert model.u.shape == (2, 2, 2)
+        assert model.v.shape == (2, 2, 3)
+        assert model.su.shape == (2, 2, 2) 
+        assert model.sv.shape == (2, 2, 3)
+
+    def test_compute_E(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.P = np.array([1, 2, 3])
+        model.O = np.array([3, 2, 1])
+        E = model.compute_E()
+        assert E == model.E
+        assert E == np.sqrt(8/3)
+
+    def test_compute_gradient_I_u(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.k = 2
+        model.d_x = 3
+        *_, model.m = np.meshgrid(range(1), range(2), range(1, 3), indexing='ij')
+        model.e_x = np.array([[[1, 2],
+                                [3, 4]]])
+        model.sum_e_y = np.array([[1, 2]])
+        model.a = np.array([3,4])
+        model.phases = np.array([1,2])
+        expected = np.array([[
+            3 * 1 * 1 * (1j * 2 * 3 * 1 * 1 + 1j * 2 * 3 * 2 * 2),
+            4 * 2 * 2 * (1j * 2 * 3 * 1 * 3 + 1j * 2 * 3 * 2 * 4)
+        ]])
+        assert (expected == model.compute_gradient_I_u()).all()
+
+    def test_compute_gradient_I_v(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.k = 2
+        model.d_y = 3
+        *_, model.n = np.meshgrid(range(1), range(2), range(1, 3), indexing='ij')
+        model.e_y = np.array([[[1, 2],
+                                [3, 4]]])
+        model.sum_e_x = np.array([[1, 2]])
+        model.a = np.array([3,4])
+        model.phases = np.array([1,2])
+        expected = np.array([[
+            3 * 1 * 1 * (1j * 2 * 3 * 1 * 1 + 1j * 2 * 3 * 2 * 2),
+            4 * 2 * 2 * (1j * 2 * 3 * 1 * 3 + 1j * 2 * 3 * 2 * 4)
+        ]])
+        assert (expected == model.compute_gradient_I_v()).all()
+
+    def test_compute_gradient_I_a(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.I_p = np.array([1, 2])
+        model.a = np.array([3, 4])
+        expected = np.array([1/3, 2/4])
+        assert (expected == model.compute_gradient_I_a()).all()
+
+    def test_compute_gradient_I_phases(self):
+        model = PhasedArrayModel(
+            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+        )
+        model.I_p = np.array([1, 2])
+        expected = np.array([1j, 2j])
+        assert (expected == model.compute_gradient_I_phases()).all()
