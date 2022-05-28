@@ -38,7 +38,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_copy_uv_over_array_and_sources(self):
         model = PhasedArrayModel(
-            omega=1, M=5, N=10, P=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
+            omega=1, M=5, N=10, S=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
         )
         assert model.u.shape == (52, 2, 5)
         assert model.v.shape == (52, 2, 10)
@@ -47,7 +47,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_copy_source_positions_over_array_source(self):
         model = PhasedArrayModel(
-            omega=1, M=5, N=10, P=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
+            omega=1, M=5, N=10, S=2, d_x=1, d_y=1, D=2, theta_res=0.5, phi_res=0.5
         )
         model.set_source_info(
             np.array([np.pi/4, 0]),
@@ -89,7 +89,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_e(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
         )
         model.set_source_info(
             np.array([np.pi/4, 0]),
@@ -128,7 +128,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_I(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
         )
         model.set_source_info(
             np.array([np.pi/4, 0]),
@@ -143,7 +143,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_P(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=np.pi/4, phi_res=np.pi
         )
         model.set_source_info(
             np.array([np.pi/4, 0]),
@@ -160,7 +160,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_ingest_new_scan_positions(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model._ingest_new_scan_positions(np.array([[0, 0], [np.pi/4, np.pi/2]]))
         assert (model.theta == np.array([0, np.pi/4])).all()
@@ -174,7 +174,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_E(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.P = np.array([1, 2, 3])
         model.O = np.array([3, 2, 1])
@@ -184,7 +184,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_u(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.k = 2
         model.d_x = 3
@@ -202,7 +202,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_v(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.k = 2
         model.d_y = 3
@@ -220,7 +220,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_a(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.I_p = np.array([1, 2])
         model.a = np.array([3, 4])
@@ -229,7 +229,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_phases(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.I_p = np.array([1, 2])
         expected = np.array([1j, 2j])
@@ -237,7 +237,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_theta(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.grad_I_u = np.array([[1, 2]])
         model.grad_I_v = np.array([[3, 4]])
@@ -251,7 +251,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I_theta(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.grad_I_u = np.array([[1, 2]])
         model.grad_I_v = np.array([[3, 4]])
@@ -265,7 +265,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_I(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.grad_I_theta = np.array([[1, 2], [3, 4]])
         model.grad_I_phi = np.array([[5, 6], [7, 8]])
@@ -279,7 +279,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient_P(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.grad_I = np.array([
             [1+1j, 1-2j],
@@ -294,7 +294,7 @@ class TestPhasedArrayModel(unittest.TestCase):
 
     def test_compute_gradient(self):
         model = PhasedArrayModel(
-            omega=2, M=2, N=3, P=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
+            omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.E = 2
         model.O = np.zeros(2)

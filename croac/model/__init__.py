@@ -1,7 +1,7 @@
 import numpy as np
 
 class PhasedArrayModel(object):
-    def __init__(self, omega, M, N, d_x, d_y, P, D=2, theta_res=np.pi/1000, phi_res=np.pi/1000):
+    def __init__(self, omega, M, N, d_x, d_y, S, D=2, theta_res=np.pi/1000, phi_res=np.pi/1000):
         """
         Inputs:
             omega (float) - the wavelength
@@ -9,7 +9,7 @@ class PhasedArrayModel(object):
             N (int) - size of the array along the y-axis
             d_x (float) - spacing of elements along the x-axis
             d_y (float) - spacing of elements along the y-axis
-            P (int) - number of point sources
+            S (int) - number of point sources
             D (1 or 2) - number of dimensions of our phased array
             theta_res (float) - resolution of theta scan
             phi_res (float) - resolution of phi scan
@@ -20,7 +20,7 @@ class PhasedArrayModel(object):
         self.N = N if D == 2 else 1
         self.d_x = d_x
         self.d_y = d_y
-        self.P = P
+        self.S = S
         self.D = D
         self.theta_res = theta_res
         self.phi_res = phi_res
@@ -28,7 +28,7 @@ class PhasedArrayModel(object):
         self._initialize_scan_angles()
         self._copy_uv_over_array_and_sources()
         # source info
-        self.set_source_info(np.zeros(P), np.zeros(P), np.ones(P), np.zeros(P))
+        self.set_source_info(np.zeros(S), np.zeros(S), np.ones(S), np.zeros(S))
 
     def _initialize_scan_angles(self):
         """
@@ -70,13 +70,13 @@ class PhasedArrayModel(object):
         """
         # note that because the problem is separable we can 
         # grid out u and v separably 
-        self.u, _, self.m = np.meshgrid(self.base_u, range(self.P), range(1, self.M + 1), indexing='ij')
-        self.v, _, self.n = np.meshgrid(self.base_v, range(self.P), range(1, self.N + 1), indexing='ij')
+        self.u, _, self.m = np.meshgrid(self.base_u, range(self.S), range(1, self.M + 1), indexing='ij')
+        self.v, _, self.n = np.meshgrid(self.base_v, range(self.S), range(1, self.N + 1), indexing='ij')
         return self.u, self.v, self.m, self.n
 
     def set_source_info(self, theta, phi, a, psi):
         for arr in (theta, phi, a, psi):
-            assert arr.shape == (self.P,)
+            assert arr.shape == (self.S,)
 
         self.source_theta = theta
         self.source_phi = phi
@@ -186,7 +186,7 @@ class PhasedArrayModel(object):
         return self.grad_I
 
     def _compute_gradient_P(self):
-        self.grad_P = (
+        self.grad_P = np.real(
             self.grad_I * np.conjugate(self.I)
             + np.conjugate(self.grad_I) * self.I
         )
@@ -212,6 +212,6 @@ class PhasedArrayModel(object):
         self._compute_gradient_P()
         return self._compute_gradient()
 
-    def set_target(X, y):
+    def set_target(self, X, y):
         self._ingest_new_scan_positions(X)
         self.O = y
