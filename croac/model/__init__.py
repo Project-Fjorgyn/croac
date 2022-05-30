@@ -1,7 +1,12 @@
 import numpy as np
 
 class PhasedArrayModel(object):
-    def __init__(self, omega, M, N, d_x, d_y, S, D=2, theta_res=np.pi/1000, phi_res=np.pi/1000):
+    def __init__(
+        self, omega, M, N, d_x, d_y, S, D=2, 
+        theta_res=np.pi/1000, phi_res=np.pi/1000,
+        theta_gate=0.05, phi_gate=0.05, a_gate=0.1,
+        psi_gate=0, iterations=1000
+    ):
         """
         Inputs:
             omega (float) - the wavelength
@@ -29,6 +34,8 @@ class PhasedArrayModel(object):
         self._copy_uv_over_array_and_sources()
         # source info
         self.set_source_info(np.zeros(S), np.zeros(S), np.ones(S), np.zeros(S))
+        self.set_gates(theta_gate, phi_gate if self.D == 2 else 0, a_gate, psi_gate)
+        self.iterations = iterations
 
     def _initialize_scan_angles(self):
         """
@@ -221,7 +228,7 @@ class PhasedArrayModel(object):
         self._ingest_new_scan_positions(X)
         self.O = y
 
-    def set_gates(self, theta, phi, a, psi, step_down=2.):
+    def set_gates(self, theta, phi, a, psi, step_down=2., min_step_size=0.001):
         # the gates are effectively a maximum
         # learning step for each dimension
         # we do this because the order of magnitude
@@ -234,6 +241,7 @@ class PhasedArrayModel(object):
             psi * np.ones(self.S)
         ))
         self.step_down = step_down
+        self.min_step_size = min_step_size
 
     def step(self):
         last_E = self.compute_E()
@@ -252,4 +260,17 @@ class PhasedArrayModel(object):
         # if we followed the gradient and got
         # worse error, we're moving too fast
         if new_E > last_E:
-            self.gates /= self.step_down
+            self.gates = np.maximum(
+                self.gates / self.step_down,
+                self.min_step_size * np.ones(4*self.S)
+            )
+
+    def fit(self, X, y):
+        self.set_target(X, y)
+        self.timeline = [self.compute_E()]
+        for _ in range(self.iterations):
+            self.step()
+            self.timeline.append(
+                self.compute_E()
+            )
+
