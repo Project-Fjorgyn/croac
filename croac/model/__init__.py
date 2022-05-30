@@ -220,3 +220,36 @@ class PhasedArrayModel(object):
     def set_target(self, X, y):
         self._ingest_new_scan_positions(X)
         self.O = y
+
+    def set_gates(self, theta, phi, a, psi, step_down=2.):
+        # the gates are effectively a maximum
+        # learning step for each dimension
+        # we do this because the order of magnitude
+        # of our error does not correspond to the
+        # same for the ranges of our various params
+        self.gates = np.concatenate((
+            theta * np.ones(self.S),
+            phi * np.ones(self.S),
+            a * np.ones(self.S),
+            psi * np.ones(self.S)
+        ))
+        self.step_down = step_down
+
+    def step(self):
+        last_E = self.compute_E()
+        grad = self.compute_gradient()
+        divisor = np.max(np.abs(grad[self.gates != 0]) / self.gates[self.gates != 0])
+        # for the ones we've frozen, set the step to
+        # zero
+        steps = grad / divisor * (self.gates != 0)
+        self.set_source_info(
+            self.source_theta - steps[0:self.S], 
+            self.source_phi - steps[self.S:2*self.S], 
+            self.a - steps[2*self.S:3*self.S], 
+            self.source_psi - steps[3*self.S:4*self.S]
+        )
+        new_E = self.compute_E()
+        # if we followed the gradient and got
+        # worse error, we're moving too fast
+        if new_E > last_E:
+            self.gates /= self.step_down
