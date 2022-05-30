@@ -9,12 +9,23 @@ import pandas as pd
 
 from croac.model import PhasedArrayModel
 
+# run the model
 model = PhasedArrayModel(
     omega=2, M=10, N=1, d_x=1, d_y=1, D=1, S=1
 )
-theta = model.theta
-phi = model.phi
 p = model.compute_P()
 d = 10*np.log10(p/np.max(p))
-sns.lineplot(x=theta[phi == 0], y=d[phi == 0]);
+sns.lineplot(x=model.theta, y=d);
+
+# get a distribution to fit from the model
+y = model.P
+X = np.array([model.theta, model.phi]).T
+
+# fit 
+model = PhasedArrayModel(
+    omega=2, M=5, N=1, d_x=1, d_y=1, D=1, S=2
+)
+model.fit(X,y)
+sns.lineplot(x=model.theta, y=model.P);
+sns.lineplot(x=model.theta, y=model.O);
 ```
