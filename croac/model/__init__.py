@@ -80,6 +80,7 @@ class PhasedArrayModel(object):
 
         self.source_theta = theta
         self.source_phi = phi
+        self.source_psi = psi
         self.source_u = np.sin(theta)*np.cos(phi)
         self.source_v = np.sin(theta)*np.sin(phi)
         self.a = a 
