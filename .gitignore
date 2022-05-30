@@ -2,3 +2,5 @@
 .devcontainer
 .pyc
 __pycache__
+build/
+croac.egg-info/
