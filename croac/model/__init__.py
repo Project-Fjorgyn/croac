@@ -1,11 +1,14 @@
 import numpy as np
 
+from tqdm import tqdm
+
 class PhasedArrayModel(object):
     def __init__(
         self, omega, M, N, d_x, d_y, S, D=2, 
         theta_res=np.pi/1000, phi_res=np.pi/1000,
         theta_gate=0.05, phi_gate=0.05, a_gate=0.1,
-        psi_gate=0, iterations=1000
+        psi_gate=0, iterations=1000, attempts=10,
+        err_thresh=10**-1
     ):
         """
         Inputs:
@@ -18,6 +21,13 @@ class PhasedArrayModel(object):
             D (1 or 2) - number of dimensions of our phased array
             theta_res (float) - resolution of theta scan
             phi_res (float) - resolution of phi scan
+            theta_gate (float) - maximum step for theta
+            phi_gate (float) - maximum step for phi
+            a_gate (float) - maximum step for a
+            psi_gate (float) - maximum step for psi
+            iterations (int) - number of iterations to fit each guess
+            attempts (int) - max number of guesses
+            err_thresh (float) - error to consider equivalent to zero
         """
         self.omega = omega
         self.k = 2 * np.pi / omega
@@ -36,6 +46,8 @@ class PhasedArrayModel(object):
         self.set_source_info(np.zeros(S), np.zeros(S), np.ones(S), np.zeros(S))
         self.set_gates(theta_gate, phi_gate if self.D == 2 else 0, a_gate, psi_gate)
         self.iterations = iterations
+        self.attempts = attempts
+        self.err_thresh = err_thresh
 
     def _initialize_scan_angles(self):
         """
@@ -265,12 +277,45 @@ class PhasedArrayModel(object):
                 self.min_step_size * np.ones(4*self.S)
             )
 
+    def _make_guess(self):
+        # we guess the positions on the basis of where
+        # the peaks in our observed distribution are
+        thetas = np.array([
+            np.random.choice(
+                self.theta, p=self.O/np.sum(self.O)
+            )
+            for _ in range(self.S)
+        ])
+        if self.D == 2:
+            phis= np.array([
+                np.random.choice(
+                    self.phi, p=self.O/np.sum(self.O)
+                )
+                for _ in range(self.S)
+            ])
+        else:
+            phis = np.zeros(self.S)
+        return thetas, phis, np.ones(self.S), np.zeros(self.S)
+
     def fit(self, X, y):
         self.set_target(X, y)
-        self.timeline = [self.compute_E()]
-        for _ in range(self.iterations):
-            self.step()
-            self.timeline.append(
-                self.compute_E()
-            )
-
+        best_error = float('inf')
+        best_solution = None
+        for _ in tqdm(range(self.attempts)):
+            guess = self._make_guess()
+            self.set_source_info(*guess)
+            for _ in range(self.iterations):
+                self.step()
+            self.compute_E()
+            if best_error > self.E:
+                best_error = self.E
+                best_solution = (
+                    self.source_theta,
+                    self.source_phi,
+                    self.a,
+                    self.source_psi
+                )
+            if best_error <= self.err_thresh:
+                break
+        self.set_source_info(*best_solution)
+        self.compute_E()
