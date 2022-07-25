@@ -10,6 +10,7 @@ setup(
     install_requires=[
         'numpy',
         'pytest',
-        'tqdm'
+        'tqdm',
+        'pandas'
     ]
 )
