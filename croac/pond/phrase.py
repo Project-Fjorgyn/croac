@@ -23,3 +23,6 @@ class Phrase(object):
                 np.zeros(round(pause * sample_rate))
             ])
         return sound
+
+class Song(Phrase):
+    pass
