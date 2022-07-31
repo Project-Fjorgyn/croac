@@ -11,6 +11,7 @@ setup(
         'numpy',
         'pytest',
         'tqdm',
-        'pandas'
+        'pandas',
+        'scipy'
     ]
 )

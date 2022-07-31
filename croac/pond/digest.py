@@ -32,6 +32,9 @@ def remove_noisy_frequencies(fft_df, percentile):
     dfs = []
     for time in sorted(fft_df['time'].unique()):
         df = fft_df[fft_df['time'] == time].sort_values('amplitude', ascending=False)
+        if df['amplitude'].sum() == 0:
+            dfs.append(df)
+            continue
         df['amplitude_percentile'] = df['amplitude'].cumsum() / df['amplitude'].sum()
         boundary = df[df['amplitude_percentile'] > percentile]['amplitude'].values[0]
         del df['amplitude_percentile']
@@ -50,22 +53,22 @@ def note_generator(fft_df, sample_time):
         time = row['time']
         if last_time < time:
             interval = time - last_time
-            if abs(interval - sample_time) > 10 ** -10:
+            if interval - sample_time > 10 ** -10:
                 # in this case we just skipped a silent
                 # section so a new note is required
                 if current_note is not None:
-                    yield current_note
+                    yield current_note, interval - sample_time
                 current_note = Note()
                 current_note.sample_time = sample_time
             current_note.definition.append({})
         current_note.definition[-1][row['frequency']] = row['amplitude']
         last_time = time
-    yield current_note
+    yield current_note, 0
 
 def digest(data, sample_rate=44100, freq_resolution=44.1, noise_percentile=0.8, cutoff=0.1, silence_percentile=0.95):
     fft_df = build_fft_dataframe(data, sample_rate, freq_resolution)
-    fft_df = remove_noisy_frequencies(df, noise_percentile)
+    fft_df = remove_noisy_frequencies(fft_df, noise_percentile)
     fft_df = remove_silent_sections(fft_df, cutoff, silence_percentile)
     *_, sample_time = get_sample_size_params(sample_rate, freq_resolution)
-    for note in note_generator(fft_df, sample_time):
-        yield note
+    for note, pause in note_generator(fft_df, sample_time):
+        yield note, pause

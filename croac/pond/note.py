@@ -5,7 +5,7 @@ from collections import defaultdict
 class Note(object):
     def __init__(self):
         self.definition = []
-        self.phases = defaultdict(lambda: np.random.rand())
+        self.phases = defaultdict(np.random.rand)
         
     def listen(self, sample_rate=44100, pitch=1., duration=1., amplitude=1.):
         vs = np.array([])
