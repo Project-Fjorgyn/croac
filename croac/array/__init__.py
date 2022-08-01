@@ -42,3 +42,16 @@ class DelayArray(object):
                 row.append(result)
             rows.append(row)
         self.result = np.array(rows)
+
+    def decompose(self):
+        rows = []
+        for i in range(self.result.shape[0]):
+            row = []
+            for j in range(self.result.shape[1]):
+                signal = self.result[i,j,:]
+                N = signal.shape[0]
+                m = int(np.floor(N/2)) # we can't use things above nyquist
+                amp = (np.abs(np.fft.fft(signal))/N)[:m]
+                row.append(amp)
+            rows.append(row)
+        self.decomposition = np.array(rows)

@@ -77,4 +77,31 @@ class TestDelayArray(unittest.TestCase):
             ]
         )
         assert (abs(darray.result - expected_result) < 10 ** -3).all()
-        
+
+    def test_decompose(self):
+        antenna_x = np.array([1, 2])
+        antenna_y = np.array([3, 2])
+        theta = np.array([0, np.pi/4])
+        phi = np.array([np.pi/4, np.pi])
+        sample_rate = 1000
+
+        darray = DelayArray(antenna_x, antenna_y, theta, phi, sample_rate)
+
+        t = np.arange(0, 1, 1/1000) 
+        darray.result = np.array(
+            [
+                [
+                    np.sin(2 * np.pi * (10 * t))
+                ],
+                [
+                    np.sin(2 * np.pi * (20 * t))
+                ]
+            ]
+        )
+
+        darray.decompose()
+
+        expected = np.zeros((2, 1, 500))
+        expected[0,0,10] = 0.5
+        expected[1,0,20] = 0.5
+        assert (abs(expected - darray.decomposition) < 10 ** -10).all()
