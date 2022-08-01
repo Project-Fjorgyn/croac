@@ -120,7 +120,7 @@ class TestNoteGenerator(unittest.TestCase):
             {'time': 3, 'amplitude': 0.5, 'frequency': 20}
         ])
         sample_time = 1
-        note1, note2 = tuple(note_generator(fft_df, sample_time))
+        (note1, pause1), (note2, pause2) = tuple(note_generator(fft_df, sample_time))
 
         assert note1.sample_time == sample_time
         assert len(note1.definition) == 2
@@ -131,9 +131,11 @@ class TestNoteGenerator(unittest.TestCase):
         assert note1.definition[1] == {
             100: 1
         }
+        assert pause1 == 1
 
         assert note2.sample_time == sample_time
         assert len(note2.definition) == 1
         assert note2.definition[0] == {
             20: 0.5
         }
+        assert pause2 == 0
