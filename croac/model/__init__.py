@@ -1,7 +1,5 @@
 import numpy as np
 
-from tqdm import tqdm
-
 class PhasedArrayModel(object):
     def __init__(
         self, omega, M, N, d_x, d_y, S, D=2, 
@@ -301,7 +299,7 @@ class PhasedArrayModel(object):
         self.set_target(X, y)
         best_error = float('inf')
         best_solution = None
-        for _ in tqdm(range(self.attempts)):
+        for _ in range(self.attempts):
             guess = self._make_guess()
             self.set_source_info(*guess)
             for _ in range(self.iterations):
