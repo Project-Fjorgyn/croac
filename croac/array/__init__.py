@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from scipy.interpolate import interp1d
 
@@ -55,3 +56,14 @@ class DelayArray(object):
                 row.append(amp)
             rows.append(row)
         self.decomposition = np.array(rows)
+
+    def filter_frequencies(self, percentile=0.95):
+        # we sum over the angles
+        overall_impact = pd.DataFrame(self.decomposition.sum(axis=(0,1)), columns=['impact']).reset_index()
+        overall_impact = overall_impact.sort_values('impact', ascending=False)
+        overall_impact['cumulative'] = overall_impact['impact'].cumsum()/overall_impact['impact'].sum()
+        filter_value = overall_impact[overall_impact['cumulative'] > percentile]['impact'].values[0]
+        indices_to_zero = overall_impact[overall_impact['impact'] < filter_value]['index']
+        self.filtered_decomposition = self.decomposition.copy()
+        for i in indices_to_zero:
+            self.filtered_decomposition[:,:,i] = 0.

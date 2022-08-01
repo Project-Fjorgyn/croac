@@ -105,3 +105,45 @@ class TestDelayArray(unittest.TestCase):
         expected[0,0,10] = 0.5
         expected[1,0,20] = 0.5
         assert (abs(expected - darray.decomposition) < 10 ** -10).all()
+
+    def test_filter_frequencies(self):
+        antenna_x = np.array([1, 2])
+        antenna_y = np.array([3, 2])
+        theta = np.array([0, np.pi/4])
+        phi = np.array([np.pi/4, np.pi])
+        sample_rate = 1000
+
+        darray = DelayArray(antenna_x, antenna_y, theta, phi, sample_rate)
+
+        darray.decomposition = np.array(
+            [
+                [
+                    [
+                        2, 1, 3, 4
+                    ]
+                ],
+                [
+                    [
+                        2, 1, 3, 4
+                    ]
+                ]
+            ]
+        )
+
+        expected = np.array(
+            [
+                [
+                    [
+                        2, 0, 3, 4
+                    ]
+                ],
+                [
+                    [
+                        2, 0, 3, 4
+                    ]
+                ]
+            ]
+        )
+
+        darray.filter_frequencies(percentile=0.8)
+        assert (darray.filtered_decomposition == expected).all()
