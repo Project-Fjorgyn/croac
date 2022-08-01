@@ -21,7 +21,6 @@ class DelayArray(object):
         self.signals = signals
         self.samples = np.arange(0, signals.shape[1], 1)
         self.allowable_samples = self.samples[-self.delay_bounds[0]:-self.delay_bounds[1]]
-        print(self.allowable_samples)
         self.interpolators = [
             interp1d(
                 self.samples, signal, kind='linear'
