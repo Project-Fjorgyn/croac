@@ -15,7 +15,6 @@ class TestDelayArray(unittest.TestCase):
         sample_rate = 1000
 
         darray = DelayArray(antenna_x, antenna_y, theta, phi, sample_rate)
-        darray._compute_delays()
 
         expected_delays = np.array(
             [
@@ -45,3 +44,37 @@ class TestDelayArray(unittest.TestCase):
         
         assert (expected_delays == darray.delays).all()
         assert darray.delay_bounds == (-6, 5)
+
+    def test_sweep(self):
+        antenna_x = np.array([1, 2])
+        antenna_y = np.array([3, 2])
+        theta = np.array([0, np.pi/4])
+        phi = np.array([np.pi/4, np.pi])
+        sample_rate = 1000
+
+        darray = DelayArray(antenna_x, antenna_y, theta, phi, sample_rate)
+
+        signals = np.array(
+            [
+                list(range(13)),
+                list(reversed(range(13)))
+            ]
+        )
+
+        darray.ingest_signals(signals)
+        darray.sweep()
+
+        expected_result = np.array(
+            [
+                [
+                    [6 + 6, 7 + 5], # phi 1,
+                    [6 + 6, 7 + 5], # phi 2
+                ], # theta 1
+                [
+                    [0.1691 + 11.831, 1.1691 + 10.831], # phi 1,
+                    [8.0612 + 1.877, 9.0612 + 0.877], # phi 2
+                ] # theta 2
+            ]
+        )
+        assert (abs(darray.result - expected_result) < 10 ** -3).all()
+        

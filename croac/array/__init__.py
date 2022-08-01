@@ -1,5 +1,6 @@
-import scipy
 import numpy as np
+
+from scipy.interpolate import interp1d
 
 SPEED_OF_SOUND = 343 # m/s
 
@@ -14,14 +15,15 @@ class DelayArray(object):
         self.delays = - self.antenna_x * np.sin(self.theta) * np.cos(self.phi)
         self.delays -= self.antenna_y * np.sin(self.theta) * np.sin(self.phi)
         self.delays *= self.sample_rate / SPEED_OF_SOUND
-        self.delay_bounds = np.floor(np.min(self.delays)), np.ceil(np.max(self.delays))
+        self.delay_bounds = int(np.floor(np.min(self.delays))), int(np.ceil(np.max(self.delays)))
 
     def ingest_signals(self, signals):
         self.signals = signals
-        self.samples = np.arange(0, signals.shape[0], 1)
-        self.allowable_samples = np.samples[-self.delay_bounds[0]:-self.delay_bounds[1]]
+        self.samples = np.arange(0, signals.shape[1], 1)
+        self.allowable_samples = self.samples[-self.delay_bounds[0]:-self.delay_bounds[1]]
+        print(self.allowable_samples)
         self.interpolators = [
-            scipy.interpolate.interp1d(
+            interp1d(
                 self.samples, signal, kind='linear'
             )
             for signal in self.signals
@@ -41,5 +43,3 @@ class DelayArray(object):
                 row.append(result)
             rows.append(row)
         self.result = np.array(rows)
-
-
