@@ -131,6 +131,18 @@ class PhasedArrayModel(object):
         self.I = np.sum(self.I_p, axis=1)
         return self.I
 
+    def _solve_linear_system(self, m_indices):
+        assert len(m_indices) == self.S
+        self.sum_e_x = np.sum(self.e_x, axis=2)
+        self.sum_e_y = np.sum(self.e_y, axis=2)
+        self.coefs = self.sum_e_x * self.sum_e_y
+        self.matrix = self.coefs.take(m_indices, axis=0)
+        if self.S > 1:
+            self.inv_matrix = np.linalg.inv(self.matrix)
+        else:
+            self.inv_matrix = 1./self.matrix
+        self.linear_solutions = self.inv_matrix @ self.I.take(m_indices)
+
     def _compute_P(self):
         self.P = np.real(self.I * np.conjugate(self.I))
         return self.P

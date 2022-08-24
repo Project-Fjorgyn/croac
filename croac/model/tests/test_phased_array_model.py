@@ -308,3 +308,13 @@ class TestPhasedArrayModel(unittest.TestCase):
             1/(2*2) * (3 * 5 + 4 * 6),
         ])
         assert (expected == model._compute_gradient()).all()
+
+    def test_solve_linear_system(self):
+        model = PhasedArrayModel(
+            omega=2, M=10, N=1, d_x=1, d_y=1, D=1, S=2
+        )
+        model.set_source_info(np.array([0, np.pi/6]), np.zeros(2), np.array([1, 2]), np.array([0, np.pi]))
+        p = model.compute_P()
+        model._solve_linear_system(np.array([1, 2]))
+        assert np.abs(model.linear_solutions[0] - 1) < 10 ** -10
+        assert np.abs(model.linear_solutions[1] - (-2)) < 10 ** -10
