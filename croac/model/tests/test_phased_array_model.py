@@ -318,3 +318,11 @@ class TestPhasedArrayModel(unittest.TestCase):
         model._solve_linear_system(np.array([1, 2]))
         assert np.abs(model.linear_solutions[0] - 1) < 10 ** -10
         assert np.abs(model.linear_solutions[1] - (-2)) < 10 ** -10
+
+    def test_solve_linear_system_one_source(self):
+        model = PhasedArrayModel(
+            omega=2, M=10, N=1, d_x=1, d_y=1, D=1, S=1
+        )
+        p = model.compute_P()
+        model._solve_linear_system(np.array([1]))
+        assert np.abs(model.linear_solutions[0] - 1) < 10 ** -10
