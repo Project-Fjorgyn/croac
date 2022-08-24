@@ -250,6 +250,8 @@ class PhasedArrayModel(object):
             a * np.ones(self.S),
             psi * np.ones(self.S)
         ))
+        self.binary_gates = np.copy(self.gates)
+        self.binary_gates[self.binary_gates != 0] = 1.
         self.step_down = step_down
         self.min_step_size = min_step_size
 
@@ -263,9 +265,10 @@ class PhasedArrayModel(object):
         self.set_source_info(
             self.source_theta - steps[0:self.S], 
             self.source_phi - steps[self.S:2*self.S], 
-            self.a - steps[2*self.S:3*self.S], 
+            np.maximum(self.a - steps[2*self.S:3*self.S], self.min_step_size), 
             self.source_psi - steps[3*self.S:4*self.S]
         )
+        self.phases = np.exp(1j*self.source_psi)
         new_E = self.compute_E()
         # if we followed the gradient and got
         # worse error, we're moving too fast
@@ -274,6 +277,7 @@ class PhasedArrayModel(object):
                 self.gates / self.step_down,
                 self.min_step_size * np.ones(4*self.S)
             )
+            self.gates *= self.binary_gates
 
     def _make_guess(self):
         # we guess the positions on the basis of where
@@ -281,8 +285,8 @@ class PhasedArrayModel(object):
         thetas = np.array([
             np.random.choice(
                 self.theta, p=self.O/np.sum(self.O)
-            )
-            for _ in range(self.S)
+            ) if self.gates[i] != 0 else self.source_theta[i]
+            for i in range(self.S)
         ])
         if self.D == 2:
             phis= np.array([
