@@ -1,5 +1,7 @@
 import numpy as np
 
+from random import randint
+
 class PhasedArrayModel(object):
     def __init__(
         self, omega, M, N, d_x, d_y, S, D=2, 
@@ -42,7 +44,7 @@ class PhasedArrayModel(object):
         self._copy_uv_over_array_and_sources()
         # source info
         self.set_source_info(np.zeros(S), np.zeros(S), np.ones(S), np.zeros(S))
-        self.set_gates(theta_gate, phi_gate if self.D == 2 else 0, a_gate, psi_gate)
+        self.set_gates(theta_gate, phi_gate if self.D == 2 else 0, 0, 0)
         self.iterations = iterations
         self.attempts = attempts
         self.err_thresh = err_thresh
@@ -141,8 +143,26 @@ class PhasedArrayModel(object):
             self.inv_matrix = np.linalg.inv(self.matrix)
         else:
             self.inv_matrix = 1./self.matrix
-        self.linear_solutions = self.inv_matrix @ self.I.take(m_indices)
+        self.linear_solutions = self.inv_matrix @ self.Io.take(m_indices)
 
+    def _select_divisions(self, validation=0.1, test=0.1):
+        indices = list(range(self.Io.shape[0]))
+        validation_size = int(len(indices) * validation)
+        test_size = int(len(indices) * test)
+        self.linear_indices = np.array([
+            indices.pop(randint(0, len(indices) - 1))
+            for _ in range(self.S)
+        ])
+        self.validation_indices = np.array([
+            indices.pop(randint(0, len(indices) - 1))
+            for _ in range(validation_size)
+        ])
+        self.test_indices = np.array([
+            indices.pop(randint(0, len(indices) - 1))
+            for _ in range(test_size)
+        ])
+        self.gradient_indices = np.array(indices)
+        
     def _compute_P(self):
         self.P = np.real(self.I * np.conjugate(self.I))
         return self.P
@@ -161,8 +181,8 @@ class PhasedArrayModel(object):
         self.set_source_info(self.source_theta, self.source_phi, self.a, self.phases)
 
     def _compute_E(self):
-        self.Errors = self.P - self.O
-        self.E = np.sqrt(np.sum(self.Errors ** 2)/self.O.shape[0])
+        self.Errors = self.P - self.Po
+        self.E = np.sqrt(np.sum(self.Errors ** 2)/self.Po.shape[0])
         return self.E
 
     def compute_E(self):
@@ -228,7 +248,7 @@ class PhasedArrayModel(object):
 
     def _compute_gradient(self):
         self.grad = (
-            1/(self.E * self.O.shape[0])
+            1/(self.E * self.Po.shape[0])
             * np.sum(self.grad_P * self.Errors, axis=1)
         )
         return self.grad
@@ -248,7 +268,8 @@ class PhasedArrayModel(object):
 
     def set_target(self, X, y):
         self._ingest_new_scan_positions(X)
-        self.O = y
+        self.Io = y
+        self.Po = np.real(y * np.conjugate(y))
 
     def set_gates(self, theta, phi, a, psi, step_down=2., min_step_size=0.001):
         # the gates are effectively a maximum
@@ -296,14 +317,14 @@ class PhasedArrayModel(object):
         # the peaks in our observed distribution are
         thetas = np.array([
             np.random.choice(
-                self.theta, p=self.O/np.sum(self.O)
+                self.theta, p=self.Po/np.sum(self.Po)
             ) if self.gates[i] != 0 else self.source_theta[i]
             for i in range(self.S)
         ])
         if self.D == 2:
             phis= np.array([
                 np.random.choice(
-                    self.phi, p=self.O/np.sum(self.O)
+                    self.phi, p=self.Po/np.sum(self.Po)
                 )
                 for _ in range(self.S)
             ])

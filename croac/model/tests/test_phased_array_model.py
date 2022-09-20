@@ -177,7 +177,7 @@ class TestPhasedArrayModel(unittest.TestCase):
             omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.P = np.array([1, 2, 3])
-        model.O = np.array([3, 2, 1])
+        model.Po = np.array([3, 2, 1])
         E = model._compute_E()
         assert E == model.E
         assert E == np.sqrt(8/3)
@@ -297,7 +297,7 @@ class TestPhasedArrayModel(unittest.TestCase):
             omega=2, M=2, N=3, S=2, d_x=1, d_y=2, D=2, theta_res=0.5, phi_res=0.5
         )
         model.E = 2
-        model.O = np.zeros(2)
+        model.Po = np.zeros(2)
         model.grad_P = np.array([
             [1, 2],
             [3, 4]
@@ -315,6 +315,7 @@ class TestPhasedArrayModel(unittest.TestCase):
         )
         model.set_source_info(np.array([0, np.pi/6]), np.zeros(2), np.array([1, 2]), np.array([0, np.pi]))
         p = model.compute_P()
+        model.Io = model.I
         model._solve_linear_system(np.array([1, 2]))
         assert np.abs(model.linear_solutions[0] - 1) < 10 ** -10
         assert np.abs(model.linear_solutions[1] - (-2)) < 10 ** -10
@@ -324,5 +325,6 @@ class TestPhasedArrayModel(unittest.TestCase):
             omega=2, M=10, N=1, d_x=1, d_y=1, D=1, S=1
         )
         p = model.compute_P()
+        model.Io = model.I
         model._solve_linear_system(np.array([1]))
         assert np.abs(model.linear_solutions[0] - 1) < 10 ** -10
